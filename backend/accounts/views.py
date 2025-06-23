@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .serializers import UserSerializer
+from .serializers import UserSerializer, EmployeeInfoSerializer
 from rest_framework.generics import ListAPIView
 
 class MeView(APIView):
@@ -12,35 +12,47 @@ class MeView(APIView):
         return Response(serializer.data)
 
 
-from .models import EmployeeInfo, ManagerInfo, User
+from .models import EmployeeInfo
+class EmployeeListView(ListAPIView):
+    serializer_class = EmployeeInfoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return EmployeeInfo.objects.all()
+    
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from .models import User, EmployeeInfo, ManagerInfo
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+
+@permission_classes([AllowAny])
 class RegisterView(APIView):
-    permission_classes = [AllowAny]
 
     def post(self, request):
         data = request.data
-        username = data.get("username")
-        email = data.get("email", "")
-        password = data.get("password")
-        role = data.get("role")
+        username = data.get("username", "").strip()
+        email = data.get("email", "").strip()
+        password = data.get("password", "")
+        role = data.get("role", "").strip().lower()
 
         if role not in ['employee', 'manager']:
             return Response({"error": "Invalid role."}, status=400)
 
+        if not username or not password:
+            return Response({"error": "Username and password are required."}, status=400)
+
         if User.objects.filter(username=username).exists():
             return Response({"error": "Username already exists."}, status=400)
 
-        # Handle EMPLOYEE registration
         if role == 'employee':
-            emp_id = data.get("emp_id")
+            emp_id = data.get("emp_id", "").strip().upper()
             if not emp_id:
                 return Response({"error": "Employee ID is required."}, status=400)
 
             try:
-                emp_info = EmployeeInfo.objects.get(emp_id=emp_id)
+                EmployeeInfo.objects.get(emp_id=emp_id)
             except EmployeeInfo.DoesNotExist:
                 return Response({"error": "Invalid Employee ID."}, status=400)
 
@@ -49,14 +61,13 @@ class RegisterView(APIView):
             user.save()
             return Response({"success": "Employee registered."}, status=201)
 
-        # Handle MANAGER registration
         elif role == 'manager':
-            manager_id = data.get("manager_id")
+            manager_id = data.get("manager_id", "").strip().upper()
             if not manager_id:
                 return Response({"error": "Manager ID is required."}, status=400)
 
             try:
-                manager_info = ManagerInfo.objects.get(manager_id=manager_id)
+                ManagerInfo.objects.get(manager_id=manager_id)
             except ManagerInfo.DoesNotExist:
                 return Response({"error": "Invalid Manager ID."}, status=400)
 
@@ -64,10 +75,3 @@ class RegisterView(APIView):
             user.set_password(password)
             user.save()
             return Response({"success": "Manager registered."}, status=201)
-        
-class EmployeeListView(ListAPIView):
-    serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return User.objects.filter(role='employee')

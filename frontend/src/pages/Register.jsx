@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import '../styles/Register.css'; // Import CSS
+import '../styles/Register.css';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -33,9 +33,9 @@ export default function Register() {
       };
 
       if (formData.role === 'employee') {
-        payload.emp_id = formData.emp_id;
+        payload.emp_id = formData.emp_id.trim().toUpperCase(); // normalize for backend
       } else if (formData.role === 'manager') {
-        payload.manager_id = formData.manager_id;
+        payload.manager_id = formData.manager_id.trim().toUpperCase(); // normalize for backend
       }
 
       await api.post('accounts/register/', payload);
@@ -96,7 +96,7 @@ export default function Register() {
             className="register-page-input"
             type="text"
             name="emp_id"
-            placeholder="Employee ID"
+            placeholder="Enter Employee ID"
             required
             value={formData.emp_id}
             onChange={handleChange}
@@ -108,7 +108,7 @@ export default function Register() {
             className="register-page-input"
             type="text"
             name="manager_id"
-            placeholder="Manager ID"
+            placeholder="Enter Manager ID"
             required
             value={formData.manager_id}
             onChange={handleChange}
