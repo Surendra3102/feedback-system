@@ -11,9 +11,13 @@ export default function DashboardManager() {
   const navigate = useNavigate();
 
   const loadFeedbacks = async () => {
-    const res = await api.get('feedback/');
-    setFeedbacks(res.data);
-    setEditingFeedback(null);
+    try {
+      const res = await api.get('feedback/');
+      setFeedbacks(res.data);
+      setEditingFeedback(null);
+    } catch (err) {
+      console.error('Error loading feedbacks:', err);
+    }
   };
 
   useEffect(() => {
@@ -55,16 +59,22 @@ export default function DashboardManager() {
 
       <div className="history-section">
         <h3>Feedback History</h3>
-        {feedbacks.map((fb) => (
-          <div key={fb.id} className="feedback-card">
-            <p><b>Employee:</b> {fb.employee_name}</p>
-            <p><b>Strengths:</b> {fb.strengths}</p>
-            <p><b>Improvements:</b> {fb.improvements}</p>
-            <p><b>Sentiment:</b> {fb.sentiment}</p>
-            <p><b>Tags:</b> {fb.tags}</p>
-            <button className='edit-btn' onClick={() => setEditingFeedback(fb)}>Edit</button>
-          </div>
-        ))}
+        {feedbacks.length === 0 ? (
+          <p>No feedback submitted yet.</p>
+        ) : (
+          feedbacks.map((fb) => (
+            <div key={fb.id} className="feedback-card">
+              <p><b>Employee:</b> {fb.employee_name}</p>
+              <p><b>Strengths:</b> {fb.strengths}</p>
+              <p><b>Improvements:</b> {fb.improvements}</p>
+              <p><b>Sentiment:</b> {fb.sentiment}</p>
+              <p><b>Tags:</b> {fb.tags}</p>
+              <div className="card-buttons">
+                <button className='edit-btn' onClick={() => setEditingFeedback(fb)}>Edit</button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

@@ -21,31 +21,37 @@ export default function Register() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+  e.preventDefault();
+  setError('');
 
-    try {
-      const payload = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        role: formData.role,
-      };
+  try {
+    const payload = {
+      username: formData.username,
+      email: formData.email,
+      password: formData.password,
+      role: formData.role,
+    };
 
-      if (formData.role === 'employee') {
-        payload.emp_id = formData.emp_id.trim().toUpperCase(); // normalize for backend
-      } else if (formData.role === 'manager') {
-        payload.manager_id = formData.manager_id.trim().toUpperCase(); // normalize for backend
-      }
-
-      await api.post('accounts/register/', payload);
-      alert('Registration successful!');
-      navigate('/');
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error || 'Registration failed.');
+    if (formData.role === 'employee') {
+      payload.emp_id = formData.emp_id.trim().toUpperCase();
+    } else if (formData.role === 'manager') {
+      payload.manager_id = formData.manager_id.trim().toUpperCase();
     }
-  };
+
+    await api.post('accounts/register/', payload);
+    alert('Registration successful!');
+    navigate('/');
+  } catch (err) {
+    console.error(err);
+
+    // 👇 Show backend error message if available
+    if (err.response && err.response.data && err.response.data.error) {
+      setError(err.response.data.error);
+    } else {
+      setError('Registration failed. Please try again.');
+    }
+  }
+};
 
   return (
     <div className="register-page-container">

@@ -3,7 +3,7 @@ from .models import Feedback
 from .serializers import FeedbackSerializer
 from accounts.permissions import IsManager, IsEmployee
 from rest_framework.exceptions import PermissionDenied
-
+from accounts.models import EmployeeInfo
 class FeedbackViewSet(viewsets.ModelViewSet):
     serializer_class = FeedbackSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -13,8 +13,13 @@ class FeedbackViewSet(viewsets.ModelViewSet):
         if user.role == 'manager':
             return Feedback.objects.filter(manager=user)
         elif user.role == 'employee':
-            return Feedback.objects.filter(employee=user)
+            try:
+                emp_info = EmployeeInfo.objects.get(email=user.email)  # or use emp_id match if stored
+                return Feedback.objects.filter(employee=emp_info)
+            except EmployeeInfo.DoesNotExist:
+                return Feedback.objects.none()
         return Feedback.objects.none()
+
 
     def perform_create(self, serializer):
         if self.request.user.role != 'manager':

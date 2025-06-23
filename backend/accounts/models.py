@@ -11,6 +11,7 @@ class User(AbstractUser):
 class ManagerInfo(models.Model):
     manager_id = models.CharField(max_length=4, unique=True)
     name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True, null=True, blank=True)
 
     def __str__(self):
         return f"{self.name} ({self.manager_id})"
@@ -19,6 +20,7 @@ class ManagerInfo(models.Model):
 class EmployeeInfo(models.Model):
     emp_id = models.CharField(max_length=4, unique=True)
     name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True, null=True, blank=True)
     manager = models.ForeignKey(ManagerInfo, on_delete=models.CASCADE)
 
     def __str__(self):

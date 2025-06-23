@@ -20,6 +20,14 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 class EmployeeInfoSerializer(serializers.ModelSerializer):
+    user_id = serializers.SerializerMethodField()
+
     class Meta:
         model = EmployeeInfo
-        fields=['id', 'emp_id', 'name']
+        fields = ['id', 'emp_id', 'name', 'user_id']
+
+    def get_user_id(self, obj):
+        try:
+            return User.objects.get(email=obj.email, role='employee').id
+        except User.DoesNotExist:
+            return None
