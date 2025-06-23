@@ -1,0 +1,69 @@
+/* src/styles/FeedbackTimeline.css */
+
+.feedback-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.timeline-title {
+  font-size: 1.5rem;
+  color: #444;
+  margin-bottom: 1rem;
+}
+
+.no-feedback {
+  font-style: italic;
+  color: #888;
+}
+
+.timeline-card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-left: 4px solid #007acc;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: 0.3s ease;
+}
+
+.timeline-card:hover {
+  transform: translateY(-3px);
+}
+
+.ack-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+  cursor: pointer;
+}
+
+.ack-btn:hover {
+  background-color: #218838;
+}
+
+.comment-input {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.submit-comment-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+  cursor: pointer;
+}
+
+.submit-comment-btn:hover {
+  background-color: #0056b3;
+}
