@@ -2,16 +2,19 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import FeedbackTimeline from '../components/FeedbackTimeline';
-import '../styles/DashboardEmployee.css'; 
+import '../styles/DashboardEmployee.css';
 
 export default function DashboardEmployee() {
   const [feedbacks, setFeedbacks] = useState([]);
-  const navigate = useNavigate();  // ✅ Must be inside the component
+  const navigate = useNavigate();
 
   const loadFeedbacks = async () => {
-    const res = await api.get('feedback/');
-    setFeedbacks(res.data);
+    try {
+      const res = await api.get('feedback/');
+      setFeedbacks(res.data);
+    } catch (err) {
+      console.error('Error loading feedbacks:', err);
+    }
   };
 
   useEffect(() => {
@@ -19,15 +22,19 @@ export default function DashboardEmployee() {
   }, []);
 
   const handleAcknowledge = async (id) => {
-    const fb = feedbacks.find((f) => f.id === id);
-    await api.put(`feedback/${id}/`, { ...fb, acknowledged: true });
-    loadFeedbacks();
-  };
+    try {
+      const { data } = await api.get(`feedback/${id}/`);
 
-  const handleComment = async (id, comment) => {
-    const fb = feedbacks.find((f) => f.id === id);
-    await api.put(`feedback/${id}/`, { ...fb, employee_comment: comment });
-    loadFeedbacks();
+      await api.put(`feedback/${id}/`, {
+        ...data,
+        acknowledged: true,
+      });
+
+      loadFeedbacks();
+    } catch (err) {
+      console.error('Acknowledge failed:', err.response?.data || err.message);
+      alert("Failed to acknowledge. Check console.");
+    }
   };
 
   const logout = () => {
@@ -41,12 +48,26 @@ export default function DashboardEmployee() {
         <h2>Employee Dashboard</h2>
         <button className="logout-button" onClick={logout}>Logout</button>
       </div>
-      <div className="feedback-timeline-wrapper">
-        <FeedbackTimeline
-          feedbacks={feedbacks}
-          onAcknowledge={handleAcknowledge}
-          onComment={handleComment}
-        />
+
+      <div className="feedback-list">
+        {feedbacks.length === 0 ? (
+          <p>No feedback yet.</p>
+        ) : (
+          feedbacks.map((fb) => (
+            <div className="feedback-card" key={fb.id}>
+              <p><strong>From:</strong> {fb.manager_name}</p>
+              <p><strong>Strengths:</strong> {fb.strengths}</p>
+              <p><strong>Improvements:</strong> {fb.improvements}</p>
+              <p><strong>Sentiment:</strong> {fb.sentiment}</p>
+              <p><strong>Tags:</strong> {fb.tags || '-'}</p>
+              <p><strong>Acknowledged:</strong> {fb.acknowledged ? '✅ Yes' : '❌ No'}</p>
+
+              {!fb.acknowledged && (
+                <button onClick={() => handleAcknowledge(fb.id)}>Acknowledge</button>
+              )}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

@@ -14,20 +14,21 @@ export default function FeedbackForm({ onSubmitSuccess, initialData = null, onCa
   const [employees, setEmployees] = useState([]);
 
   useEffect(() => {
-    if (initialData) {
-      setFormData({
-        employee: initialData.employee.emp_id || '',
-        strengths: initialData.strengths,
-        improvements: initialData.improvements,
-        sentiment: initialData.sentiment,
-        tags: initialData.tags || ''
-      });
-    }
-
     const fetchEmployees = async () => {
       try {
         const res = await api.get('accounts/employees/');
-        setEmployees(res.data); // All employees (with/without user_id)
+        setEmployees(res.data);
+
+        if (initialData) {
+          const emp = res.data.find(e => e.id === initialData.employee);
+          setFormData({
+            employee: emp ? emp.emp_id : '',
+            strengths: initialData.strengths,
+            improvements: initialData.improvements,
+            sentiment: initialData.sentiment,
+            tags: initialData.tags || ''
+          });
+        }
       } catch (err) {
         console.error('Error fetching employees:', err);
       }
@@ -41,52 +42,44 @@ export default function FeedbackForm({ onSubmitSuccess, initialData = null, onCa
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // Fix: Use employee.id, not user_id
-  const selectedEmp = employees.find(emp => emp.emp_id === formData.employee);
-  const employeeId = selectedEmp?.id;
+    const selectedEmp = employees.find(emp => emp.emp_id === formData.employee);
+    const employeeId = selectedEmp?.id;
 
-  if (!employeeId) {
-    alert("Invalid employee selected.");
-    return;
-  }
-
-  try {
-    const feedbackPayload = {
-      ...formData,
-      employee: employeeId  // ✅ Send EmployeeInfo ID (not user_id)
-    };
-
-    if (initialData) {
-      await api.put(`feedback/${initialData.id}/`, feedbackPayload);
-    } else {
-      await api.post('feedback/', feedbackPayload);
+    if (!employeeId) {
+      alert("Please select a valid employee.");
+      return;
     }
 
-    // Reset form
-    setFormData({
-      employee: '',
-      strengths: '',
-      improvements: '',
-      sentiment: 'neutral',
-      tags: ''
-    });
+    const payload = {
+      ...formData,
+      employee: employeeId
+    };
 
-    onSubmitSuccess();
-    if (onCancelEdit) onCancelEdit();
-  } catch (error) {
-    console.error('Feedback submission error:', error);
-    console.log("Error details:", error.response?.data); // 🔍 Log backend response
-    alert("Feedback submission failed. Check console.");
-  }
-};
+    try {
+      if (initialData) {
+        await api.put(`feedback/${initialData.id}/`, payload);
+      } else {
+        await api.post('feedback/', payload);
+      }
 
+      // Reset form
+      setFormData({
+        employee: '',
+        strengths: '',
+        improvements: '',
+        sentiment: 'neutral',
+        tags: ''
+      });
 
-
-
-
-  
+      onSubmitSuccess();
+      if (onCancelEdit) onCancelEdit();
+    } catch (err) {
+      console.error('Feedback submission failed:', err.response?.data || err.message);
+      alert("Failed to submit feedback. Check console.");
+    }
+  };
 
   return (
     <form className="feedback-form" onSubmit={handleSubmit}>
@@ -98,15 +91,12 @@ export default function FeedbackForm({ onSubmitSuccess, initialData = null, onCa
         value={formData.employee}
         onChange={handleChange}
         required
-        disabled={!!initialData} // Disable in edit mode
+        disabled={!!initialData} // disabled while editing
       >
         <option value="">Select Employee</option>
-        {employees.map((emp) => (
-          <option
-            key={emp.id}
-            value={emp.emp_id}
-          >
-            {emp.name} ({emp.emp_id}) {emp.user_id ? '' : ' - Not Registered'}
+        {employees.map(emp => (
+          <option key={emp.id} value={emp.emp_id}>
+            {emp.name} ({emp.emp_id}) {emp.user_id ? '' : '- Not Registered'}
           </option>
         ))}
       </select>
@@ -125,7 +115,7 @@ export default function FeedbackForm({ onSubmitSuccess, initialData = null, onCa
         name="improvements"
         value={formData.improvements}
         onChange={handleChange}
-        placeholder="Areas to improve"
+        placeholder="Areas to Improve"
         required
       />
 
@@ -145,7 +135,7 @@ export default function FeedbackForm({ onSubmitSuccess, initialData = null, onCa
         name="tags"
         value={formData.tags}
         onChange={handleChange}
-        placeholder="Tags (e.g. teamwork, communication)"
+        placeholder="Tags (e.g. teamwork, punctuality)"
       />
 
       <div className="form-buttons">

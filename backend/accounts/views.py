@@ -22,11 +22,11 @@ class EmployeeListView(ListAPIView):
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import User, EmployeeInfo, ManagerInfo
+from rest_framework.permissions import AllowAny
+from accounts.models import User, EmployeeInfo, ManagerInfo
 
 class RegisterView(APIView):
-    permission_classes = [AllowAny]  # Keep this for protected registration
+    permission_classes = [AllowAny]
 
     def post(self, request):
         data = request.data
@@ -54,14 +54,19 @@ class RegisterView(APIView):
             except EmployeeInfo.DoesNotExist:
                 return Response({"error": "Invalid Employee ID."}, status=400)
 
-            # ✅ Check if this emp_id is already registered
-            if User.objects.filter(email=emp_info.email, role='employee').exists():
+            # Check if already registered
+            if emp_info.user is not None:
                 return Response({"error": "This Employee ID is already registered."}, status=400)
 
+            # Create user and link to EmployeeInfo
             user = User(username=username, email=emp_info.email, role="employee")
             user.set_password(password)
             user.save()
-            return Response({"success": "Employee registered."}, status=201)
+
+            emp_info.user = user
+            emp_info.save()
+
+            return Response({"success": "Employee registered successfully."}, status=201)
 
         elif role == 'manager':
             manager_id = data.get("manager_id", "").strip().upper()
@@ -73,11 +78,14 @@ class RegisterView(APIView):
             except ManagerInfo.DoesNotExist:
                 return Response({"error": "Invalid Manager ID."}, status=400)
 
-            # ✅ Check if this manager_id is already registered
-            if User.objects.filter(email=manager_info.email, role='manager').exists():
+            if manager_info.user is not None:
                 return Response({"error": "This Manager ID is already registered."}, status=400)
 
             user = User(username=username, email=manager_info.email, role="manager")
             user.set_password(password)
             user.save()
-            return Response({"success": "Manager registered."}, status=201)
+
+            manager_info.user = user
+            manager_info.save()
+
+            return Response({"success": "Manager registered successfully."}, status=201)

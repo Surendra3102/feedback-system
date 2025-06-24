@@ -1,9 +1,9 @@
 from rest_framework import viewsets, permissions
+from rest_framework.exceptions import PermissionDenied
 from .models import Feedback
 from .serializers import FeedbackSerializer
-from accounts.permissions import IsManager, IsEmployee
-from rest_framework.exceptions import PermissionDenied
 from accounts.models import EmployeeInfo
+
 class FeedbackViewSet(viewsets.ModelViewSet):
     serializer_class = FeedbackSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -14,12 +14,11 @@ class FeedbackViewSet(viewsets.ModelViewSet):
             return Feedback.objects.filter(manager=user)
         elif user.role == 'employee':
             try:
-                emp_info = EmployeeInfo.objects.get(email=user.email)  # or use emp_id match if stored
+                emp_info = EmployeeInfo.objects.get(user=user)
                 return Feedback.objects.filter(employee=emp_info)
             except EmployeeInfo.DoesNotExist:
                 return Feedback.objects.none()
         return Feedback.objects.none()
-
 
     def perform_create(self, serializer):
         if self.request.user.role != 'manager':
@@ -29,13 +28,13 @@ class FeedbackViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         instance = self.get_object()
         user = self.request.user
-        # Manager updates their own feedback
+
         if user.role == 'manager' and instance.manager == user:
             serializer.save()
-        # Employee can acknowledge or comment only on their own feedback
-        elif user.role == 'employee' and instance.employee == user:
+        elif user.role == 'employee' and instance.employee.user_id == user.id:
             serializer.save(
-                manager=instance.manager,  # prevent override
+                manager=instance.manager,
+                employee=instance.employee,
                 strengths=instance.strengths,
                 improvements=instance.improvements,
                 sentiment=instance.sentiment,

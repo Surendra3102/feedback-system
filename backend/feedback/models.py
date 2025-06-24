@@ -4,8 +4,8 @@ from accounts.models import User, EmployeeInfo
 class Feedback(models.Model):
     SENTIMENT_CHOICES = (
         ('positive', 'Positive'),
-        ('negative', 'Negative'),
         ('neutral', 'Neutral'),
+        ('negative', 'Negative'),
     )
 
     manager = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedbacks')
@@ -18,3 +18,6 @@ class Feedback(models.Model):
     employee_comment = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Feedback for {self.employee.name} by {self.manager.username}"

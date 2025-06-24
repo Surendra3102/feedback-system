@@ -69,6 +69,7 @@ export default function DashboardManager() {
               <p><b>Improvements:</b> {fb.improvements}</p>
               <p><b>Sentiment:</b> {fb.sentiment}</p>
               <p><b>Tags:</b> {fb.tags}</p>
+              <p><b>Acknowledged:</b> {fb.acknowledged ? '✅' : '❌'}</p>
               <div className="card-buttons">
                 <button className='edit-btn' onClick={() => setEditingFeedback(fb)}>Edit</button>
               </div>

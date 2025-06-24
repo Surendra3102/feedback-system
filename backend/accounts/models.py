@@ -9,6 +9,7 @@ class User(AbstractUser):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='employee')
 
 class ManagerInfo(models.Model):
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True)
     manager_id = models.CharField(max_length=4, unique=True)
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True, null=True, blank=True)
@@ -18,6 +19,8 @@ class ManagerInfo(models.Model):
 
 
 class EmployeeInfo(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+
     emp_id = models.CharField(max_length=4, unique=True)
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True, null=True, blank=True)
